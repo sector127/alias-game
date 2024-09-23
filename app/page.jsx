@@ -319,13 +319,13 @@ const AliasGame = () => {
                             </div>
                             <div className="flex flex-wrap justify-center space-x-4">
                                 <Button onClick={handleCorrect}
-                                        className="w-36 h-24 bg-green-500 hover:bg-green-600 text-white text-lg rounded-xl py-3 px-6 shadow-lg transform hover:scale-110 transition-all duration-300"
+                                        className="w-28 h-20 bg-green-500 hover:bg-green-600 text-white text-lg rounded-xl py-3 px-6 shadow-lg transform hover:scale-110 transition-all duration-300"
                                         disabled={gameState === 'paused'}>
                                     <CheckCircle className="mr-2 h-6 w-6"/>
                                     სწორი
                                 </Button>
                                 <Button onClick={handleSkip}
-                                        className="w-36 h-24 bg-red-500 hover:bg-red-600 text-white text-lg rounded-xl py-3 px-6 shadow-lg transform hover:scale-110 transition-all duration-300"
+                                        className="w-28 h-20 bg-red-500 hover:bg-red-600 text-white text-lg rounded-xl py-3 px-6 shadow-lg transform hover:scale-110 transition-all duration-300"
                                         disabled={gameState === 'paused'}>
                                     <XCircle className="mr-2 h-6 w-6"/>
                                     Skip
