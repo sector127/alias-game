@@ -214,7 +214,7 @@ const AliasGame = () => {
         <div
             className={`${noto.className} min-h-screen bg-gradient-to-b from-blue-400 to-purple-600 p-2 sm:p-4 font-sans`}>
             <Card
-                className="w-full max-w-md mx-auto bg-white rounded-3xl shadow-2xl overflow-hidden min-h-[calc(100vh-1rem)] sm:min-h-[calc(100vh-2rem)] flex flex-col justify-between">
+                className="w-full max-w-md mx-auto bg-white rounded-3xl shadow-2xl overflow-hidden min-h-[calc(100vh-10rem)] sm:min-h-[calc(100vh-2rem)] flex flex-col justify-between">
                 <CardHeader className="bg-yellow-400 p-4 sm:p-6">
                     <CardTitle className="flex flex-row justify-between items-center">
                         <div className="w-24 sm:w-32">{logo}</div>
