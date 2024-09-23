@@ -41,8 +41,7 @@ const AliasGame = () => {
     const [gameState, setGameState] = useState('setup');
     const [winningScore, setWinningScore] = useState(30);
     const [lastRound, setLastRound] = useState(false);
-    const [roundsPlayed, setRoundsPlayed] = useState([0, 0]);
-    const [gameEnding, setGameEnding] = useState(false);
+    const [, setRoundsPlayed] = useState([0, 0]);
     const [windowSize, setWindowSize] = useState({width: 0, height: 0});
     const [soundEnabled, setSoundEnabled] = useState(true);
 
