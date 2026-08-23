@@ -17,6 +17,12 @@ import {
   playTimeUpSound,
   playWinningSound,
   playCountdownBeep,
+  playButtonTapSound,
+  playPillSelectSound,
+  playToggleSound,
+  playModalSound,
+  playStreakSound,
+  playPartyChallengeSound,
 } from '@/lib/sounds';
 import LogoSvg from '@/lib/logoSvg';
 import {
@@ -227,11 +233,12 @@ export default function AliasGame() {
       const ch = getRandomChallenge();
       setCurrentChallenge(ch);
       setChallengeCompleted(true);
+      playPartyChallengeSound(soundEnabled);
     } else {
       setCurrentChallenge(null);
       setChallengeCompleted(false);
     }
-  }, [partyModeEnabled]);
+  }, [partyModeEnabled, soundEnabled]);
 
   // End active team turn
   const endTeamTurn = useCallback(() => {
@@ -263,6 +270,7 @@ export default function AliasGame() {
     if (!currentChallenge) return;
     const newStatus = !challengeCompleted;
     setChallengeCompleted(newStatus);
+    playToggleSound(newStatus, soundEnabled);
     const scoreDiff = newStatus ? 2 : -2;
 
     setTeams((prevTeams) => {
@@ -307,8 +315,15 @@ export default function AliasGame() {
   const handleCorrect = useCallback(() => {
     if (gameState !== 'playing' || !currentWord) return;
 
-    playCorrectSound(soundEnabled);
-    setCurrentStreak((s) => s + 1);
+    const nextStreak = currentStreak + 1;
+    setCurrentStreak(nextStreak);
+
+    // Play energetic streak sound on every 3rd consecutive correct word, otherwise melodic chime
+    if (nextStreak >= 3 && nextStreak % 2 === 1) {
+      playStreakSound(nextStreak, soundEnabled);
+    } else {
+      playCorrectSound(soundEnabled);
+    }
 
     const playedItem: PlayedWord = {
       id: `${Date.now()}-${Math.random()}`,
@@ -331,7 +346,7 @@ export default function AliasGame() {
     });
 
     setCurrentWord(getNextWord());
-  }, [gameState, currentWord, soundEnabled, currentTeamIndex, getNextWord]);
+  }, [gameState, currentWord, soundEnabled, currentStreak, currentTeamIndex, getNextWord]);
 
   // Handle Skip
   const handleSkip = useCallback(() => {
@@ -511,6 +526,7 @@ export default function AliasGame() {
   // Add / Remove Team in Setup
   const handleAddTeam = () => {
     if (teams.length >= 6) return;
+    playButtonTapSound(soundEnabled);
     const nextIdx = teams.length;
     const newName = DEFAULT_TEAM_NAMES[nextIdx] || `გუნდი ${nextIdx + 1}`;
     setTeams((prev) => [
@@ -529,6 +545,7 @@ export default function AliasGame() {
 
   const handleRemoveTeam = (index: number) => {
     if (teams.length <= 2) return;
+    playButtonTapSound(soundEnabled);
     setTeams((prev) => prev.filter((_, i) => i !== index));
   };
 
@@ -542,6 +559,7 @@ export default function AliasGame() {
 
   // Category Toggle
   const toggleCategory = (catId: string) => {
+    playPillSelectSound(soundEnabled);
     if (catId === 'all') {
       setSelectedCategories(['all']);
       return;
@@ -594,18 +612,25 @@ export default function AliasGame() {
           <div className="flex items-center gap-1.5 sm:gap-2">
             {/* Sound Toggle */}
             <button
-              onClick={() => setSoundEnabled(!soundEnabled)}
+              onClick={() => {
+                const nextState = !soundEnabled;
+                playToggleSound(nextState, true);
+                setSoundEnabled(nextState);
+              }}
               aria-label="Toggle Sound"
-              className="p-2 sm:p-2.5 rounded-xl bg-slate-800/80 hover:bg-slate-700 text-slate-300 hover:text-white transition-colors"
+              className="p-2 sm:p-2.5 rounded-xl bg-slate-800/80 hover:bg-slate-700 text-slate-300 hover:text-white transition-colors active:scale-95"
             >
               {soundEnabled ? <Volume2 className="h-5 w-5 text-amber-400" /> : <VolumeX className="h-5 w-5 text-slate-500" />}
             </button>
 
             {/* Rules Button */}
             <button
-              onClick={() => setShowRulesModal(true)}
+              onClick={() => {
+                playModalSound(true, soundEnabled);
+                setShowRulesModal(true);
+              }}
               aria-label="Game Rules"
-              className="p-2 sm:p-2.5 rounded-xl bg-slate-800/80 hover:bg-slate-700 text-slate-300 hover:text-white transition-colors"
+              className="p-2 sm:p-2.5 rounded-xl bg-slate-800/80 hover:bg-slate-700 text-slate-300 hover:text-white transition-colors active:scale-95"
             >
               <HelpCircle className="h-5 w-5 text-purple-400" />
             </button>
@@ -614,8 +639,11 @@ export default function AliasGame() {
             {(gameState === 'playing' || gameState === 'paused') && (
               <>
                 <button
-                  onClick={() => setGameState(gameState === 'paused' ? 'playing' : 'paused')}
-                  className="p-2 sm:p-2.5 rounded-xl bg-slate-800/80 hover:bg-slate-700 text-slate-300 hover:text-white transition-colors"
+                  onClick={() => {
+                    playButtonTapSound(soundEnabled);
+                    setGameState(gameState === 'paused' ? 'playing' : 'paused');
+                  }}
+                  className="p-2 sm:p-2.5 rounded-xl bg-slate-800/80 hover:bg-slate-700 text-slate-300 hover:text-white transition-colors active:scale-95"
                   aria-label="Pause / Play"
                 >
                   {gameState === 'paused' ? (
@@ -721,7 +749,10 @@ export default function AliasGame() {
                 </div>
 
                 <button
-                  onClick={() => setSetupStep(2)}
+                  onClick={() => {
+                    playButtonTapSound(soundEnabled);
+                    setSetupStep(2);
+                  }}
                   className="w-full py-4 rounded-2xl bg-gradient-to-r from-purple-600 to-pink-600 hover:opacity-95 text-white font-black text-base shadow-xl shadow-purple-900/40 active:scale-[0.99] transition-all flex items-center justify-center gap-2"
                 >
                   <span>კატეგორიების არჩევა (2/3)</span>
@@ -745,7 +776,7 @@ export default function AliasGame() {
                   <div className="grid grid-cols-2 gap-2 max-h-[48vh] overflow-y-auto pr-0.5">
                     <button
                       onClick={() => toggleCategory('all')}
-                      className={`p-2.5 rounded-2xl text-left border transition-all flex items-center gap-2.5 ${
+                      className={`p-2.5 rounded-2xl text-left border transition-all flex items-center gap-2.5 active:scale-95 ${
                         selectedCategories.includes('all')
                           ? 'bg-purple-600/25 border-purple-500 text-purple-200 shadow-md shadow-purple-950/50'
                           : 'bg-slate-950/40 border-slate-800 text-slate-400 hover:border-slate-700'
@@ -765,7 +796,7 @@ export default function AliasGame() {
                         <button
                           key={cat.id}
                           onClick={() => toggleCategory(cat.id)}
-                          className={`p-2.5 rounded-2xl text-left border transition-all flex items-center gap-2.5 ${
+                          className={`p-2.5 rounded-2xl text-left border transition-all flex items-center gap-2.5 active:scale-95 ${
                             isSelected
                               ? 'bg-purple-600/25 border-purple-500 text-purple-200 shadow-md shadow-purple-950/50'
                               : 'bg-slate-950/40 border-slate-800 text-slate-400 hover:border-slate-700'
@@ -785,13 +816,19 @@ export default function AliasGame() {
                 {/* Back / Next Navigation */}
                 <div className="grid grid-cols-3 gap-2 pt-2">
                   <button
-                    onClick={() => setSetupStep(1)}
+                    onClick={() => {
+                      playButtonTapSound(soundEnabled);
+                      setSetupStep(1);
+                    }}
                     className="py-3.5 rounded-2xl bg-slate-800 hover:bg-slate-700 text-slate-300 font-bold text-sm border border-slate-700 active:scale-95 transition-all"
                   >
                     ← უკან
                   </button>
                   <button
-                    onClick={() => setSetupStep(3)}
+                    onClick={() => {
+                      playButtonTapSound(soundEnabled);
+                      setSetupStep(3);
+                    }}
                     className="col-span-2 py-3.5 rounded-2xl bg-gradient-to-r from-purple-600 to-pink-600 hover:opacity-95 text-white font-black text-sm shadow-xl shadow-purple-900/40 active:scale-[0.99] transition-all flex items-center justify-center gap-1.5"
                   >
                     <span>პარამეტრები (3/3)</span>
@@ -821,8 +858,11 @@ export default function AliasGame() {
                       {[30, 45, 60, 90].map((t) => (
                         <button
                           key={t}
-                          onClick={() => setRoundTime(t)}
-                          className={`flex-1 py-2.5 rounded-xl text-xs font-black border transition-all ${
+                          onClick={() => {
+                            playPillSelectSound(soundEnabled);
+                            setRoundTime(t);
+                          }}
+                          className={`flex-1 py-2.5 rounded-xl text-xs font-black border transition-all active:scale-95 ${
                             roundTime === t
                               ? 'bg-cyan-500 text-slate-950 border-cyan-400 shadow-lg shadow-cyan-950/50'
                               : 'bg-slate-900 border-slate-800 text-slate-400 hover:border-slate-700'
@@ -843,8 +883,11 @@ export default function AliasGame() {
                       {[20, 30, 50, 75].map((s) => (
                         <button
                           key={s}
-                          onClick={() => setWinningScore(s)}
-                          className={`flex-1 py-2.5 rounded-xl text-xs font-black border transition-all ${
+                          onClick={() => {
+                            playPillSelectSound(soundEnabled);
+                            setWinningScore(s);
+                          }}
+                          className={`flex-1 py-2.5 rounded-xl text-xs font-black border transition-all active:scale-95 ${
                             winningScore === s
                               ? 'bg-amber-500 text-slate-950 border-amber-400 shadow-lg shadow-amber-950/50'
                               : 'bg-slate-900 border-slate-800 text-slate-400 hover:border-slate-700'
@@ -865,7 +908,11 @@ export default function AliasGame() {
                       </div>
                     </div>
                     <button
-                      onClick={() => setSkipPenalty(!skipPenalty)}
+                      onClick={() => {
+                        const nextVal = !skipPenalty;
+                        playToggleSound(nextVal, soundEnabled);
+                        setSkipPenalty(nextVal);
+                      }}
                       className={`w-12 h-7 rounded-full transition-colors relative p-0.5 ${
                         skipPenalty ? 'bg-purple-600' : 'bg-slate-800'
                       }`}
@@ -889,7 +936,11 @@ export default function AliasGame() {
                       </div>
                     </div>
                     <button
-                      onClick={() => setPartyModeEnabled(!partyModeEnabled)}
+                      onClick={() => {
+                        const nextVal = !partyModeEnabled;
+                        playToggleSound(nextVal, soundEnabled);
+                        setPartyModeEnabled(nextVal);
+                      }}
                       className={`w-12 h-7 rounded-full transition-colors relative p-0.5 ${
                         partyModeEnabled ? 'bg-purple-600' : 'bg-slate-800'
                       }`}
@@ -906,13 +957,19 @@ export default function AliasGame() {
                 {/* Back / Start Navigation */}
                 <div className="grid grid-cols-3 gap-2 pt-2">
                   <button
-                    onClick={() => setSetupStep(2)}
+                    onClick={() => {
+                      playButtonTapSound(soundEnabled);
+                      setSetupStep(2);
+                    }}
                     className="py-4 rounded-2xl bg-slate-800 hover:bg-slate-700 text-slate-300 font-bold text-sm border border-slate-700 active:scale-95 transition-all"
                   >
                     ← უკან
                   </button>
                   <button
-                    onClick={handleStartGame}
+                    onClick={() => {
+                      playButtonTapSound(soundEnabled);
+                      handleStartGame();
+                    }}
                     className="col-span-2 py-4 rounded-2xl bg-gradient-to-r from-emerald-500 to-teal-600 hover:opacity-95 text-white font-black text-base shadow-xl shadow-emerald-950/60 active:scale-[0.99] transition-all flex items-center justify-center gap-2"
                   >
                     <Play className="h-5 w-5 fill-white" />
@@ -1017,7 +1074,10 @@ export default function AliasGame() {
 
             {/* Ready Start Button */}
             <button
-              onClick={startCountdown}
+              onClick={() => {
+                playButtonTapSound(soundEnabled);
+                startCountdown();
+              }}
               className="w-full py-5 rounded-2xl bg-gradient-to-r from-emerald-500 to-teal-600 hover:opacity-95 text-white font-black text-xl shadow-xl shadow-emerald-950/60 active:scale-[0.99] transition-all flex items-center justify-center gap-3"
             >
               <Play className="h-6 w-6 fill-white" /> რაუნდის დაწყება
@@ -1296,7 +1356,10 @@ export default function AliasGame() {
 
             {/* Confirm & Next Team Button */}
             <button
-              onClick={handleConfirmTurnEnd}
+              onClick={() => {
+                playButtonTapSound(soundEnabled);
+                handleConfirmTurnEnd();
+              }}
               className="w-full py-4 rounded-2xl bg-gradient-to-r from-purple-600 via-pink-600 to-amber-500 hover:opacity-95 text-white font-black text-lg shadow-xl shadow-purple-900/40 active:scale-[0.99] transition-all flex items-center justify-center gap-2"
             >
               <span>შემდეგი გუნდი</span>
@@ -1398,14 +1461,20 @@ export default function AliasGame() {
             {/* Action Buttons */}
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 pt-2">
               <button
-                onClick={handleRematch}
+                onClick={() => {
+                  playButtonTapSound(soundEnabled);
+                  handleRematch();
+                }}
                 className="py-4 rounded-2xl bg-gradient-to-r from-emerald-500 to-teal-600 hover:opacity-95 text-white font-black text-base shadow-xl shadow-emerald-950/60 active:scale-[0.99] transition-all flex items-center justify-center gap-2"
               >
                 <RefreshCw className="h-5 w-5" /> რევანში (იგივე გუნდები)
               </button>
 
               <button
-                onClick={handleResetToSetup}
+                onClick={() => {
+                  playButtonTapSound(soundEnabled);
+                  handleResetToSetup();
+                }}
                 className="py-4 rounded-2xl bg-slate-800 hover:bg-slate-700 text-slate-200 font-bold text-base border border-slate-700 active:scale-[0.99] transition-all flex items-center justify-center gap-2"
               >
                 <Users className="h-5 w-5" /> ახალი თამაში
@@ -1441,8 +1510,11 @@ export default function AliasGame() {
                 <h3 className="text-lg font-black text-white">როგორ ვითამაშოთ ალიასი?</h3>
               </div>
               <button
-                onClick={() => setShowRulesModal(false)}
-                className="text-slate-400 hover:text-white p-1"
+                onClick={() => {
+                  playModalSound(false, soundEnabled);
+                  setShowRulesModal(false);
+                }}
+                className="text-slate-400 hover:text-white p-1 active:scale-90 transition-transform"
               >
                 <X className="h-5 w-5" />
               </button>
@@ -1491,8 +1563,11 @@ export default function AliasGame() {
             </div>
 
             <button
-              onClick={() => setShowRulesModal(false)}
-              className="w-full py-3 rounded-xl bg-purple-600 hover:bg-purple-500 text-white font-bold text-sm transition-colors"
+              onClick={() => {
+                playModalSound(false, soundEnabled);
+                setShowRulesModal(false);
+              }}
+              className="w-full py-3 rounded-xl bg-purple-600 hover:bg-purple-500 text-white font-bold text-sm transition-colors active:scale-98"
             >
               გასაგებია!
             </button>
@@ -1523,14 +1598,20 @@ export default function AliasGame() {
             </div>
             <div className="grid grid-cols-2 gap-2 pt-2">
               <button
-                onClick={() => setShowConfirmRestart(false)}
-                className="py-2.5 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-300 font-bold text-xs transition-colors"
+                onClick={() => {
+                  playModalSound(false, soundEnabled);
+                  setShowConfirmRestart(false);
+                }}
+                className="py-2.5 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-300 font-bold text-xs transition-colors active:scale-95"
               >
                 გაუქმება
               </button>
               <button
-                onClick={handleResetToSetup}
-                className="py-2.5 rounded-xl bg-rose-600 hover:bg-rose-500 text-white font-bold text-xs transition-colors"
+                onClick={() => {
+                  playButtonTapSound(soundEnabled);
+                  handleResetToSetup();
+                }}
+                className="py-2.5 rounded-xl bg-rose-600 hover:bg-rose-500 text-white font-bold text-xs transition-colors active:scale-95"
               >
                 დიახ, შეწყვეტა
               </button>
