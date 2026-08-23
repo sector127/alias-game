@@ -23,21 +23,38 @@
   --input: 217.2 32.6% 17.5%;
   --ring: 212.7 26.8% 83.9%;
   --radius: 0.75rem;
+
+  /* Safe Area Insets for iPhone Notch / Dynamic Island */
+  --sat: env(safe-area-inset-top, 0px);
+  --sab: env(safe-area-inset-bottom, 0px);
+  --sal: env(safe-area-inset-left, 0px);
+  --sar: env(safe-area-inset-right, 0px);
+}
+
+html {
+  height: 100%;
+  height: 100dvh;
+  height: -webkit-fill-available;
 }
 
 body {
   margin: 0;
+  min-height: 100%;
+  min-height: 100dvh;
+  min-height: -webkit-fill-available;
   font-family: 'Noto Sans Georgian', system-ui, -apple-system, sans-serif;
   background-color: #020617;
   color: #f8fafc;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
+  overscroll-behavior-y: none;
+  touch-action: manipulation;
 }
 
 /* Custom smooth scrollbars */
 ::-webkit-scrollbar {
-  width: 6px;
-  height: 6px;
+  width: 5px;
+  height: 5px;
 }
 ::-webkit-scrollbar-track {
   background: rgba(15, 23, 42, 0.6);

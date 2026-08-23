@@ -568,7 +568,15 @@ export default function AliasGame() {
   const totalMatchCorrect = teams.reduce((acc, t) => acc + t.totalCorrect, 0);
 
   return (
-    <main className="min-h-screen bg-slate-950 text-slate-100 flex flex-col items-center justify-between p-2 sm:p-4 md:p-6 select-none overflow-x-hidden relative">
+    <main
+      className="min-h-[100dvh] h-[100dvh] bg-slate-950 text-slate-100 flex flex-col items-center justify-between p-2 sm:p-4 select-none overflow-hidden relative"
+      style={{
+        paddingTop: 'max(env(safe-area-inset-top, 0px), 8px)',
+        paddingBottom: 'max(env(safe-area-inset-bottom, 0px), 8px)',
+        paddingLeft: 'max(env(safe-area-inset-left, 0px), 8px)',
+        paddingRight: 'max(env(safe-area-inset-right, 0px), 8px)',
+      }}
+    >
       {/* Dynamic Background Glow */}
       <div className="fixed inset-0 pointer-events-none overflow-hidden z-0">
         <div className="absolute -top-40 -left-40 w-96 h-96 bg-purple-600/20 rounded-full blur-3xl" />
@@ -577,10 +585,10 @@ export default function AliasGame() {
       </div>
 
       {/* Main Glassmorphic Container */}
-      <div className="w-full max-w-xl bg-slate-900/80 backdrop-blur-xl border border-slate-800 rounded-3xl shadow-2xl shadow-purple-950/50 flex flex-col justify-between overflow-hidden relative z-10 min-h-[92vh] sm:min-h-[88vh]">
+      <div className="w-full max-w-xl bg-slate-900/85 backdrop-blur-xl border border-slate-800 rounded-3xl shadow-2xl shadow-purple-950/50 flex flex-col justify-between overflow-hidden relative z-10 flex-1 min-h-0">
         
         {/* Header Bar */}
-        <header className="px-4 py-3 sm:px-6 sm:py-4 bg-slate-900/90 border-b border-slate-800/80 flex items-center justify-between">
+        <header className="px-4 py-2.5 sm:px-6 sm:py-3.5 bg-slate-900/90 border-b border-slate-800/80 flex items-center justify-between shrink-0">
           <LogoSvg className="h-9 sm:h-10" />
 
           <div className="flex items-center gap-1.5 sm:gap-2">
@@ -1417,7 +1425,15 @@ export default function AliasGame() {
       {/* HOW TO PLAY (RULES) MODAL */}
       {/* ========================================================================= */}
       {showRulesModal && (
-        <div className="fixed inset-0 z-50 bg-slate-950/80 backdrop-blur-sm flex items-center justify-center p-4">
+        <div
+          className="fixed inset-0 z-50 bg-slate-950/85 backdrop-blur-md flex items-center justify-center p-4"
+          style={{
+            paddingTop: 'max(env(safe-area-inset-top, 0px), 16px)',
+            paddingBottom: 'max(env(safe-area-inset-bottom, 0px), 16px)',
+            paddingLeft: 'max(env(safe-area-inset-left, 0px), 16px)',
+            paddingRight: 'max(env(safe-area-inset-right, 0px), 16px)',
+          }}
+        >
           <div className="w-full max-w-md bg-slate-900 border border-slate-800 rounded-3xl p-6 shadow-2xl space-y-4 max-h-[85vh] overflow-y-auto animate-in fade-in zoom-in-95 duration-150">
             <div className="flex items-center justify-between border-b border-slate-800 pb-3">
               <div className="flex items-center gap-2">
@@ -1488,7 +1504,15 @@ export default function AliasGame() {
       {/* CONFIRM RESTART MODAL */}
       {/* ========================================================================= */}
       {showConfirmRestart && (
-        <div className="fixed inset-0 z-50 bg-slate-950/80 backdrop-blur-sm flex items-center justify-center p-4">
+        <div
+          className="fixed inset-0 z-50 bg-slate-950/85 backdrop-blur-md flex items-center justify-center p-4"
+          style={{
+            paddingTop: 'max(env(safe-area-inset-top, 0px), 16px)',
+            paddingBottom: 'max(env(safe-area-inset-bottom, 0px), 16px)',
+            paddingLeft: 'max(env(safe-area-inset-left, 0px), 16px)',
+            paddingRight: 'max(env(safe-area-inset-right, 0px), 16px)',
+          }}
+        >
           <div className="w-full max-w-sm bg-slate-900 border border-slate-800 rounded-3xl p-6 shadow-2xl space-y-4 text-center animate-in fade-in zoom-in-95 duration-150">
             <div className="w-12 h-12 mx-auto rounded-full bg-rose-500/20 text-rose-400 flex items-center justify-center">
               <RotateCcw className="h-6 w-6" />
