@@ -7,6 +7,10 @@ import {
   getAllWords,
 } from '@/lib/words';
 import {
+  PartyChallenge,
+  getRandomChallenge,
+} from '@/lib/challenges';
+import {
   playCorrectSound,
   playSkipSound,
   playTickingSound,
@@ -115,6 +119,7 @@ export default function AliasGame() {
   const [winningScore, setWinningScore] = useState(30);
   const [skipPenalty, setSkipPenalty] = useState(true); // true = -1, false = 0
   const [selectedCategories, setSelectedCategories] = useState<string[]>(['general']);
+  const [partyModeEnabled, setPartyModeEnabled] = useState(true);
   const [soundEnabled, setSoundEnabled] = useState(true);
   const [setupStep, setSetupStep] = useState<1 | 2 | 3>(1);
 
@@ -123,6 +128,8 @@ export default function AliasGame() {
   const [timeLeft, setTimeLeft] = useState(60);
   const [currentWord, setCurrentWord] = useState('');
   const [currentTurnWords, setCurrentTurnWords] = useState<PlayedWord[]>([]);
+  const [currentChallenge, setCurrentChallenge] = useState<PartyChallenge | null>(null);
+  const [challengeCompleted, setChallengeCompleted] = useState(true);
   const [roundNumber, setRoundNumber] = useState(1);
   const [isTieBreaker, setIsTieBreaker] = useState(false);
   const [countdownValue, setCountdownValue] = useState(3);
@@ -214,12 +221,63 @@ export default function AliasGame() {
     setGameState('playing');
   };
 
+  // Assign random challenge if Party Mode is active
+  const assignNextChallenge = useCallback(() => {
+    if (partyModeEnabled) {
+      const ch = getRandomChallenge();
+      setCurrentChallenge(ch);
+      setChallengeCompleted(true);
+    } else {
+      setCurrentChallenge(null);
+      setChallengeCompleted(false);
+    }
+  }, [partyModeEnabled]);
+
   // End active team turn
   const endTeamTurn = useCallback(() => {
     if (timerRef.current) clearInterval(timerRef.current);
     if (soundEnabled) playTimeUpSound(true);
+
+    // Apply Party Challenge bonus (+2) if active
+    if (partyModeEnabled && currentChallenge) {
+      setChallengeCompleted(true);
+      setTeams((prevTeams) => {
+        const updated = [...prevTeams];
+        const team = updated[currentTeamIndex];
+        if (team) {
+          updated[currentTeamIndex] = {
+            ...team,
+            score: team.score + 2,
+            roundScore: team.roundScore + 2,
+          };
+        }
+        return updated;
+      });
+    }
+
     setGameState('turnEnd');
-  }, [soundEnabled]);
+  }, [soundEnabled, partyModeEnabled, currentChallenge, currentTeamIndex]);
+
+  // Toggle Challenge Bonus in Turn Review
+  const toggleChallengeCompleted = () => {
+    if (!currentChallenge) return;
+    const newStatus = !challengeCompleted;
+    setChallengeCompleted(newStatus);
+    const scoreDiff = newStatus ? 2 : -2;
+
+    setTeams((prevTeams) => {
+      const updated = [...prevTeams];
+      const team = updated[currentTeamIndex];
+      if (team) {
+        updated[currentTeamIndex] = {
+          ...team,
+          score: team.score + scoreDiff,
+          roundScore: team.roundScore + scoreDiff,
+        };
+      }
+      return updated;
+    });
+  };
 
   // Main game timer effect
   useEffect(() => {
@@ -398,6 +456,7 @@ export default function AliasGame() {
 
     // Reset round scores for display in next turn
     setTeams((prev) => prev.map((t) => ({ ...t, roundScore: 0 })));
+    assignNextChallenge();
     setGameState('ready');
   };
 
@@ -416,6 +475,7 @@ export default function AliasGame() {
         totalSkipped: 0,
       }))
     );
+    assignNextChallenge();
     setGameState('ready');
   };
 
@@ -434,6 +494,7 @@ export default function AliasGame() {
         totalSkipped: 0,
       }))
     );
+    assignNextChallenge();
     setGameState('ready');
   };
 
@@ -443,6 +504,7 @@ export default function AliasGame() {
     if (countdownTimerRef.current) clearInterval(countdownTimerRef.current);
     setShowConfirmRestart(false);
     setSetupStep(1);
+    setCurrentChallenge(null);
     setGameState('setup');
   };
 
@@ -807,6 +869,30 @@ export default function AliasGame() {
                       />
                     </button>
                   </div>
+
+                  {/* Party Mode Challenges Toggle */}
+                  <div className="flex items-center justify-between bg-slate-950/40 p-3 rounded-2xl border border-purple-900/30">
+                    <div className="space-y-0.5">
+                      <div className="text-xs font-black text-purple-200 flex items-center gap-1.5">
+                        <Sparkles className="h-3.5 w-3.5 text-amber-400" /> Party რეჟიმი (გიჟური დავალებები)
+                      </div>
+                      <div className="text-[11px] text-slate-400">
+                        {partyModeEnabled ? 'ჩართულია (სახალისო გამოწვევები +2 ბონუსით)' : 'გამორთულია (კლასიკური თამაში)'}
+                      </div>
+                    </div>
+                    <button
+                      onClick={() => setPartyModeEnabled(!partyModeEnabled)}
+                      className={`w-12 h-7 rounded-full transition-colors relative p-0.5 ${
+                        partyModeEnabled ? 'bg-purple-600' : 'bg-slate-800'
+                      }`}
+                    >
+                      <div
+                        className={`w-6 h-6 rounded-full bg-white transition-transform ${
+                          partyModeEnabled ? 'translate-x-5' : 'translate-x-0'
+                        }`}
+                      />
+                    </button>
+                  </div>
                 </div>
 
                 {/* Back / Start Navigation */}
@@ -875,6 +961,29 @@ export default function AliasGame() {
                 />
               </div>
             </div>
+
+            {/* Party Challenge Spotlight Card (If active) */}
+            {partyModeEnabled && currentChallenge && (
+              <div className="bg-gradient-to-r from-purple-950/60 via-slate-900/80 to-purple-950/60 p-4 rounded-3xl border border-purple-500/40 shadow-xl text-left space-y-2 animate-in zoom-in-95 duration-200">
+                <div className="flex items-center justify-between">
+                  <span className="text-xs font-black uppercase tracking-wider text-purple-300 flex items-center gap-1.5">
+                    <Sparkles className="h-4 w-4 text-amber-400" /> Party გამოწვევა (+2 ბონუსი)
+                  </span>
+                  <span className={`text-[11px] font-black px-2.5 py-0.5 rounded-full border ${currentChallenge.badgeColor}`}>
+                    {currentChallenge.categoryName}
+                  </span>
+                </div>
+                <div className="flex items-start gap-3 pt-0.5">
+                  <span className="text-3xl sm:text-4xl shrink-0">{currentChallenge.emoji}</span>
+                  <div>
+                    <h4 className="text-sm font-black text-white">{currentChallenge.title}</h4>
+                    <p className="text-xs sm:text-sm font-bold text-slate-200 leading-snug">
+                      {currentChallenge.instruction}
+                    </p>
+                  </div>
+                </div>
+              </div>
+            )}
 
             {/* Mini Standings */}
             <div className="bg-slate-950/50 p-4 rounded-2xl border border-slate-800/60 space-y-2">
@@ -970,6 +1079,14 @@ export default function AliasGame() {
                 </div>
               </div>
             </div>
+
+            {/* Party Challenge Floating Reminder Badge */}
+            {partyModeEnabled && currentChallenge && gameState === 'playing' && (
+              <div className="mx-auto inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-gradient-to-r from-purple-950/90 via-slate-900/95 to-purple-950/90 border border-purple-500/50 shadow-lg text-xs font-black text-purple-200 animate-in fade-in max-w-full truncate">
+                <span className="text-base shrink-0">{currentChallenge.emoji}</span>
+                <span className="truncate">{currentChallenge.instruction}</span>
+              </div>
+            )}
 
             {/* Streak Counter Badge */}
             {currentStreak >= 3 && (
@@ -1078,6 +1195,45 @@ export default function AliasGame() {
                 </div>
               </div>
             </div>
+
+            {/* Party Challenge Evaluation Box */}
+            {partyModeEnabled && currentChallenge && (
+              <div
+                onClick={toggleChallengeCompleted}
+                className={`p-3.5 rounded-2xl border cursor-pointer select-none transition-all flex items-center justify-between gap-3 ${
+                  challengeCompleted
+                    ? 'bg-purple-950/40 border-purple-500/60 shadow-lg shadow-purple-950/50'
+                    : 'bg-slate-950/40 border-slate-800 opacity-60'
+                }`}
+              >
+                <div className="flex items-center gap-3 min-w-0">
+                  <span className="text-3xl shrink-0">{currentChallenge.emoji}</span>
+                  <div className="text-left min-w-0">
+                    <div className="text-xs font-black text-white flex items-center gap-1.5">
+                      <span>დავალება: {currentChallenge.title}</span>
+                      <span className={`text-[10px] px-2 py-0.5 rounded-full border ${currentChallenge.badgeColor}`}>
+                        {currentChallenge.categoryName}
+                      </span>
+                    </div>
+                    <div className="text-[11px] text-slate-300 truncate">
+                      {currentChallenge.instruction}
+                    </div>
+                    <div className="text-[11px] font-bold text-purple-300 mt-0.5">
+                      {challengeCompleted ? '✓ შესრულებულია (+2 ბონუს ქულა)' : '✕ არ შესრულებულა (0 ბონუსი)'}
+                    </div>
+                  </div>
+                </div>
+                <div
+                  className={`px-3 py-1.5 rounded-xl text-xs font-black border shrink-0 transition-all ${
+                    challengeCompleted
+                      ? 'bg-purple-600 text-white border-purple-400 shadow-md'
+                      : 'bg-slate-800 text-slate-400 border-slate-700'
+                  }`}
+                >
+                  {challengeCompleted ? 'ჩათვლილია' : 'გაუქმება'}
+                </div>
+              </div>
+            )}
 
             {/* Played Words Interactive Review List */}
             <div className="space-y-2 flex-1">
@@ -1299,6 +1455,15 @@ export default function AliasGame() {
                   <li>სინონიმების, ანტონიმების, ასოციაციებისა და განმარტებების გამოყენება.</li>
                   <li>ისტორიების, სიტუაციებისა და მაგალითების მოყვანა.</li>
                 </ul>
+              </div>
+
+              <div className="bg-purple-950/40 p-3 rounded-xl border border-purple-500/30 space-y-1">
+                <div className="font-bold text-purple-300 flex items-center gap-1.5">
+                  <Sparkles className="h-4 w-4 text-amber-400" /> 🎭 Party რეჟიმი (გიჟური დავალებები):
+                </div>
+                <p className="text-slate-300 text-xs">
+                  თითოეულ რაუნდში ამხსნელი იღებს საიდუმლო გამოწვევას (ემოციები, ხმები, მოძრაობები ან ტაბუ). დავალების წარმატებით შესრულება გუნდს ანიჭებს <strong>+2 ბონუს ქულას</strong>!
+                </p>
               </div>
 
               <div className="bg-slate-950 p-3 rounded-xl border border-slate-800 space-y-1">
