@@ -46,6 +46,8 @@ import {
   Swords,
   ChevronRight,
   Flame,
+  Smartphone,
+  MoveHorizontal,
 } from 'lucide-react';
 
 // Team color palettes for multi-team setup
@@ -142,6 +144,15 @@ export default function AliasGame() {
   const [currentStreak, setCurrentStreak] = useState(0);
   const [showRulesModal, setShowRulesModal] = useState(false);
   const [showConfirmRestart, setShowConfirmRestart] = useState(false);
+
+  // Control Mode: 'both' (Swipe + Buttons), 'swipe' (Swipe Only), 'buttons' (Buttons Only)
+  const [controlMode, setControlMode] = useState<'both' | 'swipe' | 'buttons'>('both');
+
+  // Swipe Card Physics state
+  const [dragOffset, setDragOffset] = useState({ x: 0, y: 0 });
+  const [isDragging, setIsDragging] = useState(false);
+  const [flyOutDirection, setFlyOutDirection] = useState<'left' | 'right' | null>(null);
+  const dragStartRef = useRef<{ x: number; y: number; time: number }>({ x: 0, y: 0, time: 0 });
 
   // Window size for confetti
   const [windowSize, setWindowSize] = useState({ width: 0, height: 0 });
@@ -406,6 +417,63 @@ export default function AliasGame() {
     return () => window.removeEventListener('keydown', handleKeyDown);
   }, [gameState, handleCorrect, handleSkip]);
 
+  // Interactive Pointer / Touch Swipe Physics for Card (Tinder-Style)
+  const handlePointerDown = (e: React.PointerEvent<HTMLDivElement>) => {
+    if (gameState !== 'playing' || controlMode === 'buttons' || flyOutDirection) return;
+    dragStartRef.current = { x: e.clientX, y: e.clientY, time: Date.now() };
+    setIsDragging(true);
+    try {
+      (e.currentTarget as HTMLElement).setPointerCapture(e.pointerId);
+    } catch {
+      // Ignored if unsupported
+    }
+  };
+
+  const handlePointerMove = (e: React.PointerEvent<HTMLDivElement>) => {
+    if (!isDragging || flyOutDirection) return;
+    const dx = e.clientX - dragStartRef.current.x;
+    const dy = e.clientY - dragStartRef.current.y;
+    setDragOffset({ x: dx, y: dy });
+  };
+
+  const handlePointerUpOrCancel = (e: React.PointerEvent<HTMLDivElement>) => {
+    if (!isDragging || flyOutDirection) return;
+    setIsDragging(false);
+    try {
+      (e.currentTarget as HTMLElement).releasePointerCapture(e.pointerId);
+    } catch {
+      // Ignored
+    }
+
+    const dx = dragOffset.x;
+    const dt = Math.max(1, Date.now() - dragStartRef.current.time);
+    const velocityX = Math.abs(dx) / dt;
+
+    const SWIPE_THRESHOLD = 75;
+    const VELOCITY_THRESHOLD = 0.38;
+
+    if (dx > SWIPE_THRESHOLD || (dx > 30 && velocityX > VELOCITY_THRESHOLD)) {
+      // Throw Right -> Correct
+      setFlyOutDirection('right');
+      setTimeout(() => {
+        handleCorrect();
+        setDragOffset({ x: 0, y: 0 });
+        setFlyOutDirection(null);
+      }, 150);
+    } else if (dx < -SWIPE_THRESHOLD || (dx < -30 && velocityX > VELOCITY_THRESHOLD)) {
+      // Throw Left -> Skip
+      setFlyOutDirection('left');
+      setTimeout(() => {
+        handleSkip();
+        setDragOffset({ x: 0, y: 0 });
+        setFlyOutDirection(null);
+      }, 150);
+    } else {
+      // Smooth spring back
+      setDragOffset({ x: 0, y: 0 });
+    }
+  };
+
   // Toggle word status during turn review screen (fix accidental clicks)
   const toggleTurnWordStatus = (wordId: string) => {
     const wordItem = currentTurnWords.find((w) => w.id === wordId);
@@ -584,6 +652,29 @@ export default function AliasGame() {
 
   // Total words guessed across match
   const totalMatchCorrect = teams.reduce((acc, t) => acc + t.totalCorrect, 0);
+
+  // Swipe progress & physics calculations (Tinder-Style)
+  const rightProgress = Math.min(1, Math.max(0, dragOffset.x / 65));
+  const leftProgress = Math.min(1, Math.max(0, -dragOffset.x / 65));
+
+  let cardTransform = 'translate3d(0, 0, 0) rotate(0deg)';
+  let cardTransition =
+    'transform 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.25), opacity 0.2s ease, box-shadow 0.15s ease, border-color 0.15s ease';
+  let cardOpacity = 1;
+
+  if (flyOutDirection === 'right') {
+    cardTransform = 'translate3d(120vw, 20px, 0) rotate(25deg)';
+    cardOpacity = 0;
+    cardTransition = 'transform 0.18s ease-out, opacity 0.18s ease-out';
+  } else if (flyOutDirection === 'left') {
+    cardTransform = 'translate3d(-120vw, 20px, 0) rotate(-25deg)';
+    cardOpacity = 0;
+    cardTransition = 'transform 0.18s ease-out, opacity 0.18s ease-out';
+  } else if (isDragging) {
+    const rot = Math.max(-18, Math.min(18, dragOffset.x * 0.08));
+    cardTransform = `translate3d(${dragOffset.x}px, ${dragOffset.y * 0.35}px, 0) rotate(${rot}deg)`;
+    cardTransition = 'none';
+  }
 
   return (
     <main
@@ -899,6 +990,38 @@ export default function AliasGame() {
                     </div>
                   </div>
 
+                  {/* Control Mode (Swipe vs Buttons vs Both) */}
+                  <div className="space-y-2 bg-slate-950/40 p-3 rounded-2xl border border-slate-800/60">
+                    <div className="flex items-center justify-between">
+                      <span className="text-xs font-bold text-slate-300 flex items-center gap-1.5">
+                        <Smartphone className="h-4 w-4 text-pink-400" /> მართვის რეჟიმი
+                      </span>
+                      <span className="text-[10px] text-purple-400 font-bold">Tinder Swipe</span>
+                    </div>
+                    <div className="flex gap-1.5">
+                      {[
+                        { id: 'both', label: '📱 ორივე (სვაიპი+ღილაკი)' },
+                        { id: 'swipe', label: '👆 მხოლოდ სვაიპი' },
+                        { id: 'buttons', label: '🔘 მხოლოდ ღილაკი' },
+                      ].map((m) => (
+                        <button
+                          key={m.id}
+                          onClick={() => {
+                            playPillSelectSound(soundEnabled);
+                            setControlMode(m.id as 'both' | 'swipe' | 'buttons');
+                          }}
+                          className={`flex-1 py-2 px-1 rounded-xl text-[11px] font-bold border transition-all active:scale-95 text-center ${
+                            controlMode === m.id
+                              ? 'bg-gradient-to-r from-purple-600 to-pink-600 text-white border-purple-400 shadow-md shadow-purple-950/50 font-black'
+                              : 'bg-slate-900 border-slate-800 text-slate-400 hover:border-slate-700'
+                          }`}
+                        >
+                          {m.label}
+                        </button>
+                      ))}
+                    </div>
+                  </div>
+
                   {/* Skip Penalty Toggle */}
                   <div className="flex items-center justify-between bg-slate-950/40 p-3 rounded-2xl border border-slate-800/60">
                     <div className="space-y-0.5">
@@ -1173,64 +1296,160 @@ export default function AliasGame() {
               </div>
             )}
 
-            {/* Main Word Card */}
-            <div className="flex-1 flex flex-col items-center justify-center my-2 sm:my-4">
+            {/* Main Word Card Area with 3D Tinder Swipe Physics */}
+            <div className="flex-1 flex flex-col items-center justify-center my-1 sm:my-3 relative select-none w-full">
               {gameState === 'paused' ? (
-                <div className="text-center space-y-3 py-12">
+                <div className="text-center space-y-3 py-10 animate-in fade-in zoom-in-95 duration-150">
                   <div className="w-16 h-16 mx-auto rounded-full bg-amber-500/20 border border-amber-500/40 flex items-center justify-center text-amber-400">
                     <Pause className="h-8 w-8" />
                   </div>
                   <h3 className="text-2xl font-black text-white">თამაში დაპაუზებულია</h3>
                   <button
-                    onClick={() => setGameState('playing')}
-                    className="px-6 py-2.5 rounded-xl bg-emerald-500 hover:bg-emerald-600 text-white font-bold text-sm transition-colors"
+                    onClick={() => {
+                      playButtonTapSound(soundEnabled);
+                      setGameState('playing');
+                    }}
+                    className="px-6 py-2.5 rounded-xl bg-emerald-500 hover:bg-emerald-600 text-white font-bold text-sm transition-colors active:scale-95 shadow-lg shadow-emerald-950/50"
                   >
                     გაგრძელება
                   </button>
                 </div>
               ) : (
-                <div className="w-full bg-gradient-to-b from-slate-800/90 to-slate-900/90 border-2 border-slate-700/80 rounded-3xl p-6 sm:p-10 shadow-2xl flex flex-col items-center justify-center min-h-[190px] sm:min-h-[220px] text-center transform transition-transform animate-in zoom-in-95 duration-150">
-                  <span className="text-3xl sm:text-5xl md:text-6xl font-black text-white tracking-tight drop-shadow-md break-words max-w-full">
-                    {currentWord}
-                  </span>
-                  <span className="text-xs text-slate-500 font-semibold mt-4">
-                    სიტყვა #{currentTurnWords.length + 1}
-                  </span>
+                <div className="relative w-full max-w-md flex items-center justify-center h-48 sm:h-56">
+                  {/* Background Deck Card (Physical 3D Stack depth) */}
+                  <div className="absolute inset-0 bg-slate-900/70 border border-slate-800/80 rounded-3xl transform scale-95 translate-y-2 opacity-50 pointer-events-none shadow-xl" />
+
+                  {/* Active Swipeable Card */}
+                  <div
+                    onPointerDown={controlMode !== 'buttons' ? handlePointerDown : undefined}
+                    onPointerMove={controlMode !== 'buttons' ? handlePointerMove : undefined}
+                    onPointerUp={controlMode !== 'buttons' ? handlePointerUpOrCancel : undefined}
+                    onPointerCancel={controlMode !== 'buttons' ? handlePointerUpOrCancel : undefined}
+                    style={{
+                      transform: cardTransform,
+                      transition: cardTransition,
+                      opacity: cardOpacity,
+                      touchAction: controlMode !== 'buttons' ? 'none' : 'auto',
+                      boxShadow:
+                        dragOffset.x > 15
+                          ? `0 15px 40px rgba(16, 185, 129, ${Math.min(0.65, rightProgress * 0.75)})`
+                          : dragOffset.x < -15
+                          ? `0 15px 40px rgba(244, 63, 94, ${Math.min(0.65, leftProgress * 0.75)})`
+                          : '0 20px 40px -15px rgba(0, 0, 0, 0.7)',
+                      borderColor:
+                        dragOffset.x > 15
+                          ? `rgba(52, 211, 153, ${0.4 + rightProgress * 0.6})`
+                          : dragOffset.x < -15
+                          ? `rgba(251, 113, 133, ${0.4 + leftProgress * 0.6})`
+                          : 'rgba(71, 85, 105, 0.8)',
+                    }}
+                    className={`absolute inset-0 bg-gradient-to-b from-slate-800/95 via-slate-800/90 to-slate-900/95 border-2 rounded-3xl p-6 sm:p-8 shadow-2xl flex flex-col items-center justify-center text-center select-none ${
+                      controlMode !== 'buttons' ? 'cursor-grab active:cursor-grabbing' : ''
+                    }`}
+                  >
+                    {/* Top Right Stamp (Correct / +1) */}
+                    <div
+                      className="absolute top-3.5 right-3.5 rounded-xl border-2 border-emerald-400 bg-emerald-500/30 backdrop-blur-md px-2.5 py-1 text-emerald-300 font-black text-xs sm:text-sm uppercase tracking-wider rotate-12 flex items-center gap-1 shadow-lg pointer-events-none transition-opacity"
+                      style={{ opacity: rightProgress }}
+                    >
+                      <CheckCircle2 className="h-4 w-4" /> სწორი (+1)
+                    </div>
+
+                    {/* Top Left Stamp (Skip) */}
+                    <div
+                      className="absolute top-3.5 left-3.5 rounded-xl border-2 border-rose-400 bg-rose-500/30 backdrop-blur-md px-2.5 py-1 text-rose-300 font-black text-xs sm:text-sm uppercase tracking-wider -rotate-12 flex items-center gap-1 shadow-lg pointer-events-none transition-opacity"
+                      style={{ opacity: leftProgress }}
+                    >
+                      <XCircle className="h-4 w-4" /> გამოტოვება
+                    </div>
+
+                    {/* Main Word */}
+                    <span className="text-3xl sm:text-4xl md:text-5xl font-black text-white tracking-tight drop-shadow-md break-words max-w-full leading-tight">
+                      {currentWord}
+                    </span>
+
+                    {/* Bottom word count + swipe cue */}
+                    <div className="flex items-center gap-2 mt-3 text-xs text-slate-500 font-semibold">
+                      <span>სიტყვა #{currentTurnWords.length + 1}</span>
+                      {controlMode !== 'buttons' && (
+                        <>
+                          <span>•</span>
+                          <span className="text-[11px] text-purple-400/80 font-bold">👈 სვაიპი 👉</span>
+                        </>
+                      )}
+                    </div>
+                  </div>
                 </div>
               )}
             </div>
 
-            {/* Desktop Keyboard Hints */}
-            <div className="hidden sm:flex items-center justify-center gap-4 text-[11px] text-slate-500 font-medium">
-              <span>⌨️ Space / ↓ : გამოტოვება</span>
-              <span>•</span>
-              <span>Enter / → : სწორი</span>
-              <span>•</span>
-              <span>P : პაუზა</span>
-            </div>
-
-            {/* Action Buttons: Skip & Correct */}
-            <div className="grid grid-cols-2 gap-3 sm:gap-4 pt-2">
-              {/* Skip Button */}
+            {/* In-Game Control Mode Pill & Desktop Hints */}
+            <div className="flex items-center justify-between text-[11px] text-slate-400 px-1 pt-1">
+              {/* Quick toggle mode button */}
               <button
-                onClick={handleSkip}
-                disabled={gameState === 'paused'}
-                className="py-5 sm:py-6 rounded-2xl bg-gradient-to-b from-rose-500 to-rose-600 hover:from-rose-600 hover:to-rose-700 text-white font-black text-lg sm:text-xl shadow-xl shadow-rose-950/60 active:scale-95 disabled:opacity-50 transition-all flex items-center justify-center gap-2"
+                onClick={() => {
+                  playButtonTapSound(soundEnabled);
+                  setControlMode((prev) => (prev === 'both' ? 'swipe' : prev === 'swipe' ? 'buttons' : 'both'));
+                }}
+                className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg bg-slate-950/60 border border-slate-800 text-slate-300 hover:text-white transition-colors active:scale-95"
               >
-                <XCircle className="h-6 w-6" />
-                <span>გამოტოვება</span>
+                <Smartphone className="h-3.5 w-3.5 text-purple-400" />
+                <span>
+                  მართვა:{' '}
+                  <strong className="text-purple-300 font-bold">
+                    {controlMode === 'both' ? 'ორივე' : controlMode === 'swipe' ? 'სვაიპი' : 'ღილაკები'}
+                  </strong>
+                </span>
               </button>
 
-              {/* Correct Button */}
-              <button
-                onClick={handleCorrect}
-                disabled={gameState === 'paused'}
-                className="py-5 sm:py-6 rounded-2xl bg-gradient-to-b from-emerald-500 to-teal-600 hover:from-emerald-600 hover:to-teal-700 text-white font-black text-lg sm:text-xl shadow-xl shadow-emerald-950/60 active:scale-95 disabled:opacity-50 transition-all flex items-center justify-center gap-2"
-              >
-                <CheckCircle2 className="h-6 w-6" />
-                <span>სწორი</span>
-              </button>
+              {/* Desktop Hints */}
+              <div className="hidden sm:flex items-center gap-2 text-slate-500 font-medium">
+                <span>Space: გამოტოვება</span>
+                <span>•</span>
+                <span>Enter: სწორი</span>
+              </div>
             </div>
+
+            {/* Action Buttons: Skip & Correct (Visible when controlMode is 'both' or 'buttons') */}
+            {controlMode !== 'swipe' ? (
+              <div className="grid grid-cols-2 gap-2.5 sm:gap-3 pt-1">
+                {/* Skip Button */}
+                <button
+                  onClick={handleSkip}
+                  disabled={gameState === 'paused'}
+                  className="py-4 sm:py-5 rounded-2xl bg-gradient-to-b from-rose-500 to-rose-600 hover:from-rose-600 hover:to-rose-700 text-white font-black text-base sm:text-lg shadow-lg shadow-rose-950/50 active:scale-95 disabled:opacity-50 transition-all flex items-center justify-center gap-2"
+                >
+                  <XCircle className="h-5 w-5" />
+                  <span>გამოტოვება</span>
+                </button>
+
+                {/* Correct Button */}
+                <button
+                  onClick={handleCorrect}
+                  disabled={gameState === 'paused'}
+                  className="py-4 sm:py-5 rounded-2xl bg-gradient-to-b from-emerald-500 to-teal-600 hover:from-emerald-600 hover:to-teal-700 text-white font-black text-base sm:text-lg shadow-lg shadow-emerald-950/50 active:scale-95 disabled:opacity-50 transition-all flex items-center justify-center gap-2"
+                >
+                  <CheckCircle2 className="h-5 w-5" />
+                  <span>სწორი (+1)</span>
+                </button>
+              </div>
+            ) : (
+              /* Swipe Only Gesture Guide Bar */
+              <div className="flex items-center justify-between p-3 rounded-2xl bg-slate-950/60 border border-slate-800/80 text-xs font-bold text-slate-400 animate-in fade-in">
+                <div className="flex items-center gap-1.5 text-rose-400">
+                  <XCircle className="h-4 w-4" />
+                  <span>👈 გამოტოვება</span>
+                </div>
+                <div className="flex items-center gap-1 text-purple-400/80 text-[11px]">
+                  <MoveHorizontal className="h-3.5 w-3.5" />
+                  <span>გაასრიალეთ</span>
+                </div>
+                <div className="flex items-center gap-1.5 text-emerald-400">
+                  <span>სწორი 👉</span>
+                  <CheckCircle2 className="h-4 w-4" />
+                </div>
+              </div>
+            )}
           </div>
         )}
 
@@ -1553,6 +1772,15 @@ export default function AliasGame() {
                   <li>სინონიმების, ანტონიმების, ასოციაციებისა და განმარტებების გამოყენება.</li>
                   <li>ისტორიების, სიტუაციებისა და მაგალითების მოყვანა.</li>
                 </ul>
+              </div>
+
+              <div className="bg-gradient-to-r from-emerald-950/30 to-rose-950/30 p-3 rounded-xl border border-purple-500/30 space-y-1">
+                <div className="font-bold text-emerald-300 flex items-center gap-1.5">
+                  <Smartphone className="h-4 w-4 text-purple-400" /> 👆 Tinder Swipe ჟესტები:
+                </div>
+                <p className="text-slate-300 text-xs">
+                  გაასრიალეთ ბარათი <strong>მარჯვნივ 👉</strong> სწორი პასუხისთვის (+1), ან <strong>მარცხნივ 👈</strong> გამოსატოვებლად (Skip).
+                </p>
               </div>
 
               <div className="bg-purple-950/40 p-3 rounded-xl border border-purple-500/30 space-y-1">
