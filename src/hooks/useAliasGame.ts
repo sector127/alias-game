@@ -17,8 +17,11 @@ import {
   playPartyChallengeSound,
 } from '@/lib/sounds';
 import { ThemeId, THEMES } from '@/lib/themes';
+import { useWakeLock } from '@/hooks/useWakeLock';
 
 export function useAliasGame() {
+  // Screen Wake Lock during active guessing phase
+  // (gameState is initialized below)
   // Game Setup State
   const [teams, setTeams] = useState<Team[]>([
     { id: '1', name: 'არჩევანი', score: 0, roundScore: 0, totalCorrect: 0, totalSkipped: 0, colorIndex: 0 },
@@ -74,15 +77,20 @@ export function useAliasGame() {
 
   const activeTheme = THEMES[currentTheme] || THEMES.neutral;
 
+  // Screen Wake Lock during active guessing phase
+  useWakeLock(gameState === 'playing');
+
   // Control Mode: 'both' (Swipe + Buttons), 'swipe' (Swipe Only), 'buttons' (Buttons Only)
   const [controlMode, setControlMode] = useState<ControlMode>('both');
 
   // Window size for confetti
   const [windowSize, setWindowSize] = useState({ width: 0, height: 0 });
 
-  // Refs for stable intervals and event handlers
+  // Refs for stable intervals, drift-proof timer, and event handlers
   const timerRef = useRef<NodeJS.Timeout | null>(null);
   const countdownTimerRef = useRef<NodeJS.Timeout | null>(null);
+  const endTimeRef = useRef<number>(0);
+  const lastTickSecondRef = useRef<number>(60);
   const deckRef = useRef<string[]>([]);
   const usedWordsRef = useRef<Set<string>>(new Set());
 
@@ -144,6 +152,8 @@ export function useAliasGame() {
   // Start active guessing phase
   const startActivePlay = useCallback(() => {
     setTimeLeft(roundTime);
+    endTimeRef.current = Date.now() + roundTime * 1000;
+    lastTickSecondRef.current = roundTime;
     setCurrentTurnWords([]);
     setCurrentStreak(0);
     const firstWord = getNextWord();
@@ -221,28 +231,50 @@ export function useAliasGame() {
     });
   };
 
-  // Main game timer effect
+  // Main drift-proof game timer effect with background tab synchronization
   useEffect(() => {
     if (gameState === 'playing') {
-      timerRef.current = setInterval(() => {
-        setTimeLeft((prev) => {
-          if (prev <= 1) {
-            endTeamTurn();
-            return 0;
+      // Initialize target end timestamp from current remaining time
+      endTimeRef.current = Date.now() + timeLeft * 1000;
+      lastTickSecondRef.current = timeLeft;
+
+      const checkTime = () => {
+        const now = Date.now();
+        const msRemaining = endTimeRef.current - now;
+        const secondsRemaining = Math.max(0, Math.ceil(msRemaining / 1000));
+
+        if (secondsRemaining <= 0) {
+          setTimeLeft(0);
+          endTeamTurn();
+        } else {
+          if (secondsRemaining !== lastTickSecondRef.current) {
+            lastTickSecondRef.current = secondsRemaining;
+            setTimeLeft(secondsRemaining);
+            if (secondsRemaining <= 11 && secondsRemaining > 1) {
+              playTickingSound(soundEnabled);
+            }
           }
-          if (prev <= 11 && prev > 1) {
-            playTickingSound(soundEnabled);
-          }
-          return prev - 1;
-        });
-      }, 1000);
+        }
+      };
+
+      timerRef.current = setInterval(checkTime, 250);
+
+      // Recheck immediately on tab focus / visibility change
+      const handleVisibility = () => {
+        if (document.visibilityState === 'visible') {
+          checkTime();
+        }
+      };
+
+      document.addEventListener('visibilitychange', handleVisibility);
+
+      return () => {
+        if (timerRef.current) clearInterval(timerRef.current);
+        document.removeEventListener('visibilitychange', handleVisibility);
+      };
     } else {
       if (timerRef.current) clearInterval(timerRef.current);
     }
-
-    return () => {
-      if (timerRef.current) clearInterval(timerRef.current);
-    };
   }, [gameState, endTeamTurn, soundEnabled]);
 
   // Handle Correct Guess
