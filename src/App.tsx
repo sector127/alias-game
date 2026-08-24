@@ -931,78 +931,81 @@ export default function AliasGame() {
 
             {/* STEP 3: GAME SETTINGS */}
             {setupStep === 3 && (
-              <div className="flex-1 flex flex-col justify-between space-y-4 py-1">
-                <div className="space-y-3">
+              <div className="flex-1 flex flex-col justify-between space-y-2.5 overflow-y-auto max-h-full py-0.5 animate-in fade-in duration-150">
+                <div className="space-y-2">
                   <div className="space-y-0.5">
-                    <h2 className="text-xl sm:text-2xl font-black text-white flex items-center gap-2">
-                      <Trophy className="h-5 w-5 text-amber-400" /> დრო და ქულები
+                    <h2 className="text-lg sm:text-xl font-black text-white flex items-center gap-1.5">
+                      <Trophy className="h-4 w-4 text-amber-400" /> თამაშის პარამეტრები
                     </h2>
-                    <p className="text-xs text-slate-400">დააკონფიგურირეთ რაუნდის წესები</p>
+                    <p className="text-[11px] text-slate-400">დააკონფიგურირეთ რაუნდისა და მართვის წესები</p>
                   </div>
 
-                  {/* Round Time */}
-                  <div className="space-y-2 bg-slate-950/40 p-3 rounded-2xl border border-slate-800/60">
-                    <span className="text-xs font-bold text-slate-300 flex items-center gap-1.5">
-                      <Clock className="h-4 w-4 text-cyan-400" /> რაუნდის დრო
-                    </span>
-                    <div className="flex gap-1.5">
-                      {[30, 45, 60, 90].map((t) => (
-                        <button
-                          key={t}
-                          onClick={() => {
-                            playPillSelectSound(soundEnabled);
-                            setRoundTime(t);
-                          }}
-                          className={`flex-1 py-2.5 rounded-xl text-xs font-black border transition-all active:scale-95 ${
-                            roundTime === t
-                              ? 'bg-cyan-500 text-slate-950 border-cyan-400 shadow-lg shadow-cyan-950/50'
-                              : 'bg-slate-900 border-slate-800 text-slate-400 hover:border-slate-700'
-                          }`}
-                        >
-                          {t}წმ
-                        </button>
-                      ))}
+                  {/* 2-Column: Round Time & Winning Score */}
+                  <div className="grid grid-cols-2 gap-2">
+                    {/* Round Time */}
+                    <div className="bg-slate-950/50 p-2.5 rounded-2xl border border-slate-800/80 space-y-1.5">
+                      <span className="text-[11px] font-bold text-slate-300 flex items-center gap-1">
+                        <Clock className="h-3.5 w-3.5 text-cyan-400" /> დრო
+                      </span>
+                      <div className="grid grid-cols-2 gap-1">
+                        {[30, 45, 60, 90].map((t) => (
+                          <button
+                            key={t}
+                            onClick={() => {
+                              playPillSelectSound(soundEnabled);
+                              setRoundTime(t);
+                            }}
+                            className={`py-1.5 rounded-lg text-xs font-black border transition-all active:scale-95 text-center ${
+                              roundTime === t
+                                ? 'bg-cyan-500 text-slate-950 border-cyan-400 shadow-md shadow-cyan-950/50 font-black'
+                                : 'bg-slate-900 border-slate-800 text-slate-400 hover:border-slate-700'
+                            }`}
+                          >
+                            {t}წმ
+                          </button>
+                        ))}
+                      </div>
                     </div>
-                  </div>
 
-                  {/* Winning Score */}
-                  <div className="space-y-2 bg-slate-950/40 p-3 rounded-2xl border border-slate-800/60">
-                    <span className="text-xs font-bold text-slate-300 flex items-center gap-1.5">
-                      <Trophy className="h-4 w-4 text-amber-400" /> გამარჯვების ქულა
-                    </span>
-                    <div className="flex gap-1.5">
-                      {[20, 30, 50, 75].map((s) => (
-                        <button
-                          key={s}
-                          onClick={() => {
-                            playPillSelectSound(soundEnabled);
-                            setWinningScore(s);
-                          }}
-                          className={`flex-1 py-2.5 rounded-xl text-xs font-black border transition-all active:scale-95 ${
-                            winningScore === s
-                              ? 'bg-amber-500 text-slate-950 border-amber-400 shadow-lg shadow-amber-950/50'
-                              : 'bg-slate-900 border-slate-800 text-slate-400 hover:border-slate-700'
-                          }`}
-                        >
-                          {s}
-                        </button>
-                      ))}
+                    {/* Winning Score */}
+                    <div className="bg-slate-950/50 p-2.5 rounded-2xl border border-slate-800/80 space-y-1.5">
+                      <span className="text-[11px] font-bold text-slate-300 flex items-center gap-1">
+                        <Trophy className="h-3.5 w-3.5 text-amber-400" /> ქულა
+                      </span>
+                      <div className="grid grid-cols-2 gap-1">
+                        {[20, 30, 50, 75].map((s) => (
+                          <button
+                            key={s}
+                            onClick={() => {
+                              playPillSelectSound(soundEnabled);
+                              setWinningScore(s);
+                            }}
+                            className={`py-1.5 rounded-lg text-xs font-black border transition-all active:scale-95 text-center ${
+                              winningScore === s
+                                ? 'bg-amber-500 text-slate-950 border-amber-400 shadow-md shadow-amber-950/50 font-black'
+                                : 'bg-slate-900 border-slate-800 text-slate-400 hover:border-slate-700'
+                            }`}
+                          >
+                            {s}
+                          </button>
+                        ))}
+                      </div>
                     </div>
                   </div>
 
                   {/* Control Mode (Swipe vs Buttons vs Both) */}
-                  <div className="space-y-2 bg-slate-950/40 p-3 rounded-2xl border border-slate-800/60">
+                  <div className="space-y-1.5 bg-slate-950/50 p-2.5 rounded-2xl border border-slate-800/80">
                     <div className="flex items-center justify-between">
-                      <span className="text-xs font-bold text-slate-300 flex items-center gap-1.5">
-                        <Smartphone className="h-4 w-4 text-pink-400" /> მართვის რეჟიმი
+                      <span className="text-[11px] font-bold text-slate-300 flex items-center gap-1">
+                        <Smartphone className="h-3.5 w-3.5 text-pink-400" /> მართვის რეჟიმი
                       </span>
                       <span className="text-[10px] text-purple-400 font-bold">Tinder Swipe</span>
                     </div>
-                    <div className="flex gap-1.5">
+                    <div className="flex gap-1">
                       {[
-                        { id: 'both', label: '📱 ორივე (სვაიპი+ღილაკი)' },
-                        { id: 'swipe', label: '👆 მხოლოდ სვაიპი' },
-                        { id: 'buttons', label: '🔘 მხოლოდ ღილაკი' },
+                        { id: 'both', label: '📱 ორივე' },
+                        { id: 'swipe', label: '👆 სვაიპი' },
+                        { id: 'buttons', label: '🔘 ღილაკი' },
                       ].map((m) => (
                         <button
                           key={m.id}
@@ -1010,7 +1013,7 @@ export default function AliasGame() {
                             playPillSelectSound(soundEnabled);
                             setControlMode(m.id as 'both' | 'swipe' | 'buttons');
                           }}
-                          className={`flex-1 py-2 px-1 rounded-xl text-[11px] font-bold border transition-all active:scale-95 text-center ${
+                          className={`flex-1 py-1.5 px-1 rounded-xl text-[11px] font-bold border transition-all active:scale-95 text-center ${
                             controlMode === m.id
                               ? 'bg-gradient-to-r from-purple-600 to-pink-600 text-white border-purple-400 shadow-md shadow-purple-950/50 font-black'
                               : 'bg-slate-900 border-slate-800 text-slate-400 hover:border-slate-700'
@@ -1022,69 +1025,72 @@ export default function AliasGame() {
                     </div>
                   </div>
 
-                  {/* Skip Penalty Toggle */}
-                  <div className="flex items-center justify-between bg-slate-950/40 p-3 rounded-2xl border border-slate-800/60">
-                    <div className="space-y-0.5">
-                      <div className="text-xs font-bold text-slate-200">გამოტოვების ჯარიმა (-1 ქულა)</div>
-                      <div className="text-[11px] text-slate-400">
-                        {skipPenalty ? 'Skip აკლებს 1 ქულას' : 'Skip არ აკლებს ქულას (0 ქულა)'}
+                  {/* Grouped Toggles: Penalty & Party Mode */}
+                  <div className="bg-slate-950/50 rounded-2xl border border-slate-800/80 divide-y divide-slate-800/80">
+                    {/* Skip Penalty */}
+                    <div className="flex items-center justify-between p-2.5 px-3">
+                      <div className="space-y-0.5">
+                        <div className="text-xs font-bold text-slate-200">გამოტოვების ჯარიმა (-1 ქულა)</div>
+                        <div className="text-[10px] text-slate-400">
+                          {skipPenalty ? 'Skip აკლებს 1 ქულას' : 'Skip არ აკლებს ქულას'}
+                        </div>
                       </div>
-                    </div>
-                    <button
-                      onClick={() => {
-                        const nextVal = !skipPenalty;
-                        playToggleSound(nextVal, soundEnabled);
-                        setSkipPenalty(nextVal);
-                      }}
-                      className={`w-12 h-7 rounded-full transition-colors relative p-0.5 ${
-                        skipPenalty ? 'bg-purple-600' : 'bg-slate-800'
-                      }`}
-                    >
-                      <div
-                        className={`w-6 h-6 rounded-full bg-white transition-transform ${
-                          skipPenalty ? 'translate-x-5' : 'translate-x-0'
+                      <button
+                        onClick={() => {
+                          const nextVal = !skipPenalty;
+                          playToggleSound(nextVal, soundEnabled);
+                          setSkipPenalty(nextVal);
+                        }}
+                        className={`w-11 h-6 rounded-full transition-colors relative p-0.5 shrink-0 ${
+                          skipPenalty ? 'bg-purple-600' : 'bg-slate-800'
                         }`}
-                      />
-                    </button>
-                  </div>
+                      >
+                        <div
+                          className={`w-5 h-5 rounded-full bg-white transition-transform ${
+                            skipPenalty ? 'translate-x-5' : 'translate-x-0'
+                          }`}
+                        />
+                      </button>
+                    </div>
 
-                  {/* Party Mode Challenges Toggle */}
-                  <div className="flex items-center justify-between bg-slate-950/40 p-3 rounded-2xl border border-purple-900/30">
-                    <div className="space-y-0.5">
-                      <div className="text-xs font-black text-purple-200 flex items-center gap-1.5">
-                        <Sparkles className="h-3.5 w-3.5 text-amber-400" /> Party რეჟიმი (გიჟური დავალებები)
+                    {/* Party Mode */}
+                    <div className="flex items-center justify-between p-2.5 px-3">
+                      <div className="space-y-0.5">
+                        <div className="text-xs font-black text-purple-200 flex items-center gap-1">
+                          <Sparkles className="h-3.5 w-3.5 text-amber-400" /> Party რეჟიმი (დავალებები)
+                        </div>
+                        <div className="text-[10px] text-slate-400">
+                          {partyModeEnabled ? 'გამოწვევები +2 ბონუსით' : 'კლასიკური თამაში'}
+                        </div>
                       </div>
-                      <div className="text-[11px] text-slate-400">
-                        {partyModeEnabled ? 'ჩართულია (სახალისო გამოწვევები +2 ბონუსით)' : 'გამორთულია (კლასიკური თამაში)'}
-                      </div>
-                    </div>
-                    <button
-                      onClick={() => {
-                        const nextVal = !partyModeEnabled;
-                        playToggleSound(nextVal, soundEnabled);
-                        setPartyModeEnabled(nextVal);
-                      }}
-                      className={`w-12 h-7 rounded-full transition-colors relative p-0.5 ${
-                        partyModeEnabled ? 'bg-purple-600' : 'bg-slate-800'
-                      }`}
-                    >
-                      <div
-                        className={`w-6 h-6 rounded-full bg-white transition-transform ${
-                          partyModeEnabled ? 'translate-x-5' : 'translate-x-0'
+                      <button
+                        onClick={() => {
+                          const nextVal = !partyModeEnabled;
+                          playToggleSound(nextVal, soundEnabled);
+                          setPartyModeEnabled(nextVal);
+                        }}
+                        className={`w-11 h-6 rounded-full transition-colors relative p-0.5 shrink-0 ${
+                          partyModeEnabled ? 'bg-purple-600' : 'bg-slate-800'
                         }`}
-                      />
-                    </button>
+                      >
+                        <div
+                          className={`w-5 h-5 rounded-full bg-white transition-transform ${
+                            partyModeEnabled ? 'translate-x-5' : 'translate-x-0'
+                          }`}
+                        />
+                      </button>
+                    </div>
                   </div>
                 </div>
 
                 {/* Back / Start Navigation */}
-                <div className="grid grid-cols-3 gap-2 pt-2">
+                <div className="grid grid-cols-3 gap-2 pt-1 shrink-0">
                   <button
                     onClick={() => {
                       playButtonTapSound(soundEnabled);
                       setSetupStep(2);
                     }}
-                    className="py-4 rounded-2xl bg-slate-800 hover:bg-slate-700 text-slate-300 font-bold text-sm border border-slate-700 active:scale-95 transition-all"
+                    className="py-3.5 rounded-2xl bg-slate-800 hover:bg-slate-700 text-slate-300 font-bold text-sm border border-slate-700 active:scale-95 transition-all"
                   >
                     ← უკან
                   </button>
@@ -1093,7 +1099,7 @@ export default function AliasGame() {
                       playButtonTapSound(soundEnabled);
                       handleStartGame();
                     }}
-                    className="col-span-2 py-4 rounded-2xl bg-gradient-to-r from-emerald-500 to-teal-600 hover:opacity-95 text-white font-black text-base shadow-xl shadow-emerald-950/60 active:scale-[0.99] transition-all flex items-center justify-center gap-2"
+                    className="col-span-2 py-3.5 rounded-2xl bg-gradient-to-r from-emerald-500 to-teal-600 hover:opacity-95 text-white font-black text-base shadow-xl shadow-emerald-950/60 active:scale-[0.99] transition-all flex items-center justify-center gap-2"
                   >
                     <Play className="h-5 w-5 fill-white" />
                     <span>თამაშის დაწყება</span>
