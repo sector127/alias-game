@@ -67,3 +67,186 @@ body {
 ::-webkit-scrollbar-thumb:hover {
   background: rgba(148, 163, 184, 0.5);
 }
+
+/* Theme Ambient Animations */
+@keyframes snowfall {
+  0% {
+    transform: translateY(0) translateX(0) rotate(0deg);
+  }
+  50% {
+    transform: translateY(50vh) translateX(18px) rotate(180deg);
+  }
+  100% {
+    transform: translateY(110vh) translateX(-18px) rotate(360deg);
+  }
+}
+
+@keyframes snowflake-dendrite {
+  0% {
+    transform: translateY(-20px) translateX(0) rotate(0deg) scale(0.9);
+    opacity: 0;
+  }
+  10% {
+    opacity: 0.9;
+  }
+  50% {
+    transform: translateY(55vh) translateX(25px) rotate(180deg) scale(1.05);
+  }
+  90% {
+    opacity: 0.85;
+  }
+  100% {
+    transform: translateY(112vh) translateX(-20px) rotate(360deg) scale(0.95);
+    opacity: 0;
+  }
+}
+
+@keyframes snowflake-twirl {
+  0% {
+    transform: translateY(-20px) translateX(0) rotateY(0deg) rotateZ(0deg);
+    opacity: 0.1;
+  }
+  15% {
+    opacity: 0.8;
+  }
+  50% {
+    transform: translateY(50vh) translateX(-30px) rotateY(180deg) rotateZ(120deg);
+  }
+  85% {
+    opacity: 0.75;
+  }
+  100% {
+    transform: translateY(110vh) translateX(25px) rotateY(360deg) rotateZ(240deg);
+    opacity: 0;
+  }
+}
+
+@keyframes summer-sparkle {
+  0%, 100% {
+    transform: scale(0.6) translateY(0);
+    opacity: 0.15;
+  }
+  50% {
+    transform: scale(1.3) translateY(-6px);
+    opacity: 0.85;
+  }
+}
+
+@keyframes palm-sway-left {
+  0%, 100% {
+    transform: rotate(0deg);
+  }
+  50% {
+    transform: rotate(3deg) translateY(-2px);
+  }
+}
+
+@keyframes palm-sway-right {
+  0%, 100% {
+    transform: rotate(0deg);
+  }
+  50% {
+    transform: rotate(-3.5deg) translateY(-2px);
+  }
+}
+
+@keyframes ocean-wave {
+  0%, 100% {
+    transform: translateX(0) scaleY(1);
+  }
+  50% {
+    transform: translateX(-15px) scaleY(1.06);
+  }
+}
+
+@keyframes aurora-shimmer {
+  0%, 100% {
+    opacity: 0.35;
+    transform: scaleY(1) translateY(0);
+    filter: hue-rotate(0deg);
+  }
+  50% {
+    opacity: 0.7;
+    transform: scaleY(1.2) translateY(-8px);
+    filter: hue-rotate(25deg);
+  }
+}
+
+@keyframes gondola-slide {
+  0% {
+    transform: translate(0, 0);
+  }
+  50% {
+    transform: translate(60px, 20px);
+  }
+  100% {
+    transform: translate(0, 0);
+  }
+}
+
+@keyframes smoke-float {
+  0% {
+    transform: translateY(0) scale(0.7);
+    opacity: 0.6;
+  }
+  50% {
+    transform: translateY(-14px) translateX(6px) scale(1.1);
+    opacity: 0.35;
+  }
+  100% {
+    transform: translateY(-28px) translateX(14px) scale(1.6);
+    opacity: 0;
+  }
+}
+
+.animate-snowfall {
+  animation-name: snowfall;
+  animation-timing-function: linear;
+  animation-iteration-count: infinite;
+}
+
+.animate-snowflake-dendrite {
+  animation-name: snowflake-dendrite;
+  animation-timing-function: cubic-bezier(0.35, 0, 0.25, 1);
+  animation-iteration-count: infinite;
+}
+
+.animate-snowflake-twirl {
+  animation-name: snowflake-twirl;
+  animation-timing-function: ease-in-out;
+  animation-iteration-count: infinite;
+}
+
+.animate-summer-sparkle {
+  animation-name: summer-sparkle;
+  animation-timing-function: ease-in-out;
+  animation-iteration-count: infinite;
+}
+
+.animate-palm-left {
+  transform-origin: bottom left;
+  animation: palm-sway-left 6.5s ease-in-out infinite;
+}
+
+.animate-palm-right {
+  transform-origin: bottom right;
+  animation: palm-sway-right 7.5s ease-in-out infinite;
+}
+
+.animate-ocean-wave {
+  animation: ocean-wave 8s ease-in-out infinite;
+}
+
+.animate-aurora {
+  animation: aurora-shimmer 9s ease-in-out infinite;
+}
+
+.animate-gondola {
+  animation: gondola-slide 18s ease-in-out infinite;
+}
+
+.animate-smoke {
+  animation: smoke-float 4s ease-out infinite;
+}
+
+

@@ -178,20 +178,64 @@ export const playModalSound = (isOpen = true, soundEnabled = true) => {
   }
 };
 
+/** Theme Switching Sound Effect */
+export const playThemeSwitchSound = (
+  theme: 'neutral' | 'summer' | 'winter' = 'neutral',
+  soundEnabled = true
+) => {
+  if (!soundEnabled) return;
+  triggerHaptic('tap');
+
+  if (theme === 'winter') {
+    // Frosty crystalline bells
+    playLayeredTone({ freq: 1174.66, type: 'sine', duration: 0.12, startGain: 0.3 });
+    playLayeredTone({ freq: 1567.98, type: 'sine', duration: 0.16, startTimeOffset: 0.05, startGain: 0.35 });
+    playLayeredTone({ freq: 2093.0, type: 'triangle', duration: 0.25, startTimeOffset: 0.11, startGain: 0.4 });
+  } else if (theme === 'summer') {
+    // Warm tropical marimba chords
+    playLayeredTone({ freq: 587.33, type: 'triangle', duration: 0.12, startGain: 0.35 });
+    playLayeredTone({ freq: 739.99, type: 'sine', duration: 0.15, startTimeOffset: 0.04, startGain: 0.35 });
+    playLayeredTone({ freq: 880.0, type: 'sine', duration: 0.22, startTimeOffset: 0.09, startGain: 0.4 });
+  } else {
+    // Cyber neon sweep
+    playLayeredTone({ freq: 440, type: 'sine', duration: 0.1, pitchBendTo: 880, startGain: 0.3 });
+    playLayeredTone({ freq: 880, type: 'triangle', duration: 0.18, startTimeOffset: 0.05, pitchBendTo: 1046.5, startGain: 0.35 });
+  }
+};
+
 // ============================================================================
 // 2. IN-GAME ACTION SOUND EFFECTS
 // ============================================================================
 
-/** Upgraded Melodic Correct Chime (Sparkling Major 9th Arpeggio) */
-export const playCorrectSound = (soundEnabled = true) => {
+/** Upgraded Melodic Correct Chime (Themed) */
+export const playCorrectSound = (
+  soundEnabled = true,
+  theme: 'neutral' | 'summer' | 'winter' = 'neutral'
+) => {
   if (!soundEnabled) return;
   triggerHaptic('success');
-  // C6 -> E6 -> G6 -> B6 shimmer
-  playLayeredTone({ freq: 1046.5, type: 'sine', duration: 0.15, startGain: 0.35 });
-  playLayeredTone({ freq: 1318.51, type: 'sine', duration: 0.18, startTimeOffset: 0.05, startGain: 0.35 });
-  playLayeredTone({ freq: 1567.98, type: 'sine', duration: 0.22, startTimeOffset: 0.09, startGain: 0.4 });
-  playLayeredTone({ freq: 1975.53, type: 'triangle', duration: 0.25, startTimeOffset: 0.13, startGain: 0.25 });
+
+  if (theme === 'winter') {
+    // Shimmering Alpine Ice Bells (High crystal harmonics)
+    playLayeredTone({ freq: 1318.51, type: 'sine', duration: 0.16, startGain: 0.35 });
+    playLayeredTone({ freq: 1567.98, type: 'sine', duration: 0.18, startTimeOffset: 0.04, startGain: 0.35 });
+    playLayeredTone({ freq: 2093.0, type: 'triangle', duration: 0.24, startTimeOffset: 0.08, startGain: 0.4 });
+    playLayeredTone({ freq: 2637.02, type: 'sine', duration: 0.28, startTimeOffset: 0.12, startGain: 0.3 });
+  } else if (theme === 'summer') {
+    // Warm Tropical Island Marimba Chime
+    playLayeredTone({ freq: 659.25, type: 'triangle', duration: 0.15, startGain: 0.38 });
+    playLayeredTone({ freq: 880.0, type: 'sine', duration: 0.18, startTimeOffset: 0.04, startGain: 0.38 });
+    playLayeredTone({ freq: 1174.66, type: 'triangle', duration: 0.22, startTimeOffset: 0.08, startGain: 0.4 });
+    playLayeredTone({ freq: 1567.98, type: 'sine', duration: 0.26, startTimeOffset: 0.12, startGain: 0.35 });
+  } else {
+    // Classic C6 -> E6 -> G6 -> B6 shimmer
+    playLayeredTone({ freq: 1046.5, type: 'sine', duration: 0.15, startGain: 0.35 });
+    playLayeredTone({ freq: 1318.51, type: 'sine', duration: 0.18, startTimeOffset: 0.05, startGain: 0.35 });
+    playLayeredTone({ freq: 1567.98, type: 'sine', duration: 0.22, startTimeOffset: 0.09, startGain: 0.4 });
+    playLayeredTone({ freq: 1975.53, type: 'triangle', duration: 0.25, startTimeOffset: 0.13, startGain: 0.25 });
+  }
 };
+
 
 /** Upgraded Smooth Whoosh / Skip Sound */
 export const playSkipSound = (soundEnabled = true) => {
